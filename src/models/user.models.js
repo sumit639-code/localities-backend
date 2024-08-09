@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken'
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 const userSchema = new Schema(
   {
     name: {
@@ -17,6 +17,23 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
+    userType: {
+      type: String,
+      enum: ["regular", "buisness"],
+      required: true,
+    },
+    buisnessName: {
+      type: String,
+    },
+    buisnessDesc: {
+      type: String,
+    },
+    location: {
+      type: String,
+    },
+    categories: {
+      type: String,
+    },
     profilePicture: {
       type: String,
     },
@@ -26,9 +43,9 @@ const userSchema = new Schema(
         ref: "Review",
       },
     ],
-    refreshToken:{
-      type:String
-    }
+    refreshToken: {
+      type: String,
+    },
   },
   { discriminatorKey: "userType", timestamps: true }
 );
@@ -42,32 +59,31 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
-userSchema.methods.generateAccessToken = async function(){
+userSchema.methods.generateAccessToken = async function () {
   return jwt.sign(
     {
-      _id:this._id,
-      email:this.email
+      _id: this._id,
+      email: this.email,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn:process.env.ACCESS_TOKEN_EXPIRY
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
     }
-  )
-}
+  );
+};
 
-userSchema.methods.generateRefreshToken = async function(){
+userSchema.methods.generateRefreshToken = async function () {
   return jwt.sign(
     {
-      _id:this._id
+      _id: this._id,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn:process.env.REFRESH_TOKEN_EXPIRY
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
-  )
-}
+  );
+};
 export const User = mongoose.model("User", userSchema);

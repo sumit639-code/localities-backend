@@ -2,14 +2,15 @@ import { User } from "../models/user.models.js";
 import { apierror } from "../utils/apierror.js";
 import { apiresponse } from "../utils/apiresponse.js";
 import { asynchandler } from "../utils/asynchandler.js";
+import { cloudUploader } from "../utils/cloudinary.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const accessToken = user.generateAccessToken();
-    // console.log(accessToken);
+    const accessToken = await user.generateAccessToken();
+    console.log(accessToken);
 
-    const refreshToken = user.generateRefreshToken();
+    const refreshToken = await user.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
@@ -20,18 +21,29 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 
 const userRegister = asynchandler(async (req, res) => {
-  const { name, email, password, profilePicture } = req.body;
-  console.log(req.body);
+  const { name, email, password, userType, buisnessName, profilePicture } =
+    req.body;
+  console.log("req.body :", req.body);
 
   console.log(name, email, password);
+  console.log("files", req.files);
   if (
     !(name && email && password) ||
     name == "" ||
     email == "" ||
     password == ""
   ) {
-    throw new apierror(305, "username or email or password is empty");
+    throw new apierror(305, "name or email or password is empty");
   }
+
+  if (userType == "buisness") {
+    if (!(buisnessName && buisnessDesc && location && categories)) {
+      throw new apierror(300, "These feilds are required.");
+    } else {
+      console.log("Buisness is not working");
+    }
+  }
+
   const existedUser = await User.findOne({ email });
   if (existedUser) {
     throw new apierror(302, "user already existed");
@@ -39,18 +51,23 @@ const userRegister = asynchandler(async (req, res) => {
   if (password.length <= 4) {
     throw new apierror(304, "password length should be more.");
   }
+  const profilePicUrl = req.files?.profilePicture[0]?.path;
+  console.log("url", profilePicUrl);
 
+  const profilePic = await cloudUploader(profilePicUrl);
   const createUser = await User.create({
     name: name,
     email: email,
     password: password,
+    userType: userType,
+    profilePicture: profilePic,
   });
   if (!createUser) {
     throw new apierror(400, "there is some error while saving the data.");
   }
 
   const createdUser = await User.findById(createUser._id).select(
-    "-password , refreshToken"
+    "-password  -refreshToken"
   );
   return res
     .status(200)
@@ -71,7 +88,7 @@ const userLogin = asynchandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     getUser._id
   );
-    console.log({accessToken},{refreshToken});
+  console.log(accessToken, refreshToken);
 
   const createdUser = await User.findById(getUser._id).select(
     "-password -refreshToken"
@@ -97,6 +114,25 @@ const userLogin = asynchandler(async (req, res) => {
     );
 });
 
+const userLogout = asynchandler(async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    throw new apierror(300, "there is some error getting the user");
+  }
+  const remRefresh = await User.findByIdAndUpdate(user._id, {
+    refreshToken: "",
+  });
+  const options = {
+    httpsOnly: true,
+    secure: true,
+  };
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new apiresponse(200, "user has been successfully logout"));
+});
+
 //temp userDelete option later i will add on the use of JWT and have the user and get the data from there and have the delete option to be available.
 const userDelete = asynchandler(async (req, res) => {
   const { email, password } = req.body;
@@ -116,4 +152,4 @@ const userDelete = asynchandler(async (req, res) => {
     .status(200)
     .json(new apiresponse(200, userDel, "User is being been delted"));
 });
-export { userRegister, userLogin, userDelete };
+export { userRegister, userLogin, userDelete, userLogout };
