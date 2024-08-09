@@ -60,7 +60,7 @@ const userRegister = asynchandler(async (req, res) => {
     email: email,
     password: password,
     userType: userType,
-    profilePicture: profilePic,
+    profilePicture: profilePic.url,
   });
   if (!createUser) {
     throw new apierror(400, "there is some error while saving the data.");
