@@ -20,6 +20,8 @@ app.get("/", (req, res) => {
 });
 
 import userRouter from "./routes/user.routes.js";
+import productRouter from "./routes/products.routes.js";
 app.use("/users", userRouter);
+app.use("/products", productRouter);
 
 export default app;
