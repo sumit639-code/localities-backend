@@ -7,7 +7,7 @@ export const verifyJwt = asynchandler(async (req, res, next) => {
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer", "");
-
+    // console.log(token);
     if (!token) {
       throw new apierror(300, "user is not authorized");
     }
@@ -20,9 +20,10 @@ export const verifyJwt = asynchandler(async (req, res, next) => {
     if (!user) {
       throw new apierror(400, "token cant be verified");
     }
+
     req.user = user;
     next();
   } catch (error) {
-    console.log(error, "There is error while verify Jwt.");
+    next(error, "There is error while verify Jwt.");
   }
 });
