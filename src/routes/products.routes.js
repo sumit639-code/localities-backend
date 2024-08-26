@@ -3,6 +3,7 @@ import {
   addProduct,
   deleteProduct,
   editProduct,
+  products,
 } from "../controllers/product.controllers.js";
 import { upload } from "../middleware/multer.middleware.js";
 import { verifyJwt } from "../middleware/auth.middleware.js";
@@ -19,6 +20,7 @@ productRouter.route("/addproduct").post(
   ]),
   addProduct
 );
+productRouter.route("/products").get(verifyJwt, products);
 productRouter.route("/editproduct").post(verifyJwt, editProduct);
 productRouter.route("/deleteproduct").delete(verifyJwt, deleteProduct);
 

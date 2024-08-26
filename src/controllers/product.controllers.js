@@ -1,8 +1,42 @@
 import { Product } from "../models/product.models.js";
+import { User } from "../models/user.models.js";
 import { apierror } from "../utils/apierror.js";
 import { apiresponse } from "../utils/apiresponse.js";
 import { asynchandler } from "../utils/asynchandler.js";
 import { cloudUploader } from "../utils/cloudinary.js";
+
+const products = asynchandler(async (req, res) => {
+  // Get all products from the database
+  const allProducts = await Product.find();
+
+  // Create an array to hold the products with additional data
+  const products = await Promise.all(
+    allProducts.map(async (fn) => {
+      // Find the user associated with the product
+      let user = await User.findById(fn.buisness);
+
+      // Return an object with the desired properties
+      return {
+        id: fn._id,
+        username: user ? user.name : "Unknown User", // Handle case where user is not found
+        userprofile:user.profilePicture,
+        productname: fn.name,
+        description: fn.description,
+        images: fn.productImages,
+        createdat: fn.createdAt,
+      };
+    })
+  );
+
+  // Log the products for debugging purposes
+  console.log(allProducts);
+  console.log(products);
+
+  // Return the products as a JSON response
+  return res
+    .status(200)
+    .json(new apiresponse(200, products, "Products are being displayed"));
+});
 
 const addProduct = asynchandler(async (req, res) => {
   const user = req.user;
@@ -97,4 +131,4 @@ const deleteProduct = asynchandler(async (req, res) => {
     .json(new apiresponse(200, productRemove, "Product has been deleted"));
 });
 
-export { addProduct, deleteProduct, editProduct };
+export { addProduct, deleteProduct, editProduct, products };

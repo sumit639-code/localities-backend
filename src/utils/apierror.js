@@ -1,7 +1,7 @@
 class apierror extends Error {
   constructor(
     statuscode,
-    message = "this message denotes the errors",
+    message = "This message denotes the errors",
     error = [],
     stack = ""
   ) {
@@ -18,4 +18,5 @@ class apierror extends Error {
     }
   }
 }
+
 export { apierror };

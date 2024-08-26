@@ -76,13 +76,19 @@ const userRegister = asynchandler(async (req, res) => {
 
 const userLogin = asynchandler(async (req, res) => {
   const { email, password } = req.body;
-  if (email == "" || password == "") {
-    throw new apierror(304, "user or password feild cant be empty");
+
+  if (!email || !password) {
+    throw new apierror(404, "Email and password fields can't be empty.",);
   }
 
   const getUser = await User.findOne({ email });
   if (!getUser) {
-    throw new apierror(400, "user is not registered.");
+    throw new apierror(404, "User is not registered.",[getUser]);
+  }
+
+  const passValid = await getUser.isPasswordCorrect(password);
+  if (!passValid) {
+    throw new apierror(401, "Invalid password.");
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -93,14 +99,13 @@ const userLogin = asynchandler(async (req, res) => {
   const createdUser = await User.findById(getUser._id).select(
     "-password -refreshToken"
   );
-  const passValid = await getUser.isPasswordCorrect(password);
-  if (!passValid) {
-    throw new apierror(306, "password is invalid");
-  }
+
   const options = {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production", // Set secure flag based on environment
+    sameSite: "strict", // Optionally, add sameSite attribute for additional security
   };
+
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -109,9 +114,10 @@ const userLogin = asynchandler(async (req, res) => {
       new apiresponse(
         200,
         { user: createdUser, accessToken, refreshToken },
-        "user is logged In."
+        "User is logged in."
       )
     );
+    
 });
 
 const userLogout = asynchandler(async (req, res) => {
