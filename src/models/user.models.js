@@ -15,7 +15,6 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
-      unique: true,
     },
     userType: {
       type: String,
@@ -41,6 +40,18 @@ const userSchema = new Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Review",
+      },
+    ],
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
     refreshToken: {

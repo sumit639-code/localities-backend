@@ -169,8 +169,7 @@ const userProfile = asynchandler(async (req, res) => {
   const products = await Promise.all(
     product.map(async (fn) => {
       // Find the user associated with the product
-      
-  
+
       // Check if the business ID matches the user ID
       if (user && user._id.toString() === fn.buisness.toString()) {
         // If true, return the product details
@@ -179,8 +178,6 @@ const userProfile = asynchandler(async (req, res) => {
           images: fn.productImages,
         };
       }
-  
-     
     })
   );
   const validProducts = products.filter(Boolean);
@@ -188,6 +185,8 @@ const userProfile = asynchandler(async (req, res) => {
     profilePicture: user.profilePicture,
     name: user.name,
     posts: validProducts,
+    following: user.following,
+    followers: user.followers,
   };
   return res
     .status(200)
@@ -199,6 +198,35 @@ const getUser = asynchandler(async (req, res) => {
     .status(200)
     .json(new apiresponse(200, user, "Getting user detials"));
 });
+
+const follow = asynchandler(async (req, res) => {
+  const { id } = req.body;
+  const profileUser = await User.findById(id);
+  const user = req.user;
+  if (!profileUser) {
+    throw new apierror(400, "can't get userprofile data.");
+  }
+  if (!user) {
+    throw new apierror(400, "can't get user data");
+  }
+  if (user._id.toString() === profileUser._id.toString()) {
+    throw new apierror(300, "same user cant be followed");
+  }
+  if (user.following.includes(profileUser._id)) {
+    throw new apierror(400, "You are already following this user.");
+  }
+
+  // Add profileUser to user's following list and add user to profileUser's followers list
+  user.following.push(profileUser._id);
+  profileUser.followers.push(user._id);
+
+  await user.save();
+  await profileUser.save();
+  return res
+    .status(200)
+    .json(new apiresponse(200, profileUser, "user has beem followed"));
+});
+
 export {
   userRegister,
   userLogin,
@@ -206,4 +234,5 @@ export {
   userLogout,
   getUser,
   userProfile,
+  follow,
 };

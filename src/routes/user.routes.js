@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  follow,
   getUser,
   userDelete,
   userLogin,
@@ -26,5 +27,6 @@ userRouter.route("/logout").post(verifyJwt, userLogout);
 userRouter.route("/getuser").get(verifyJwt, getUser);
 userRouter.route("/userprofile").post(verifyJwt, userProfile);
 userRouter.route("/delete").post(userDelete);
+userRouter.route("/follow").post(verifyJwt, follow);
 
 export default userRouter;
