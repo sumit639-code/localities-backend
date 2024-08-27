@@ -3,7 +3,7 @@ import { apierror } from "../utils/apierror.js";
 import { apiresponse } from "../utils/apiresponse.js";
 import { asynchandler } from "../utils/asynchandler.js";
 import { cloudUploader } from "../utils/cloudinary.js";
-
+import { Product } from "../models/product.models.js";
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -78,12 +78,12 @@ const userLogin = asynchandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    throw new apierror(404, "Email and password fields can't be empty.",);
+    throw new apierror(404, "Email and password fields can't be empty.");
   }
 
   const getUser = await User.findOne({ email });
   if (!getUser) {
-    throw new apierror(404, "User is not registered.",[getUser]);
+    throw new apierror(404, "User is not registered.", [getUser]);
   }
 
   const passValid = await getUser.isPasswordCorrect(password);
@@ -117,7 +117,6 @@ const userLogin = asynchandler(async (req, res) => {
         "User is logged in."
       )
     );
-    
 });
 
 const userLogout = asynchandler(async (req, res) => {
@@ -158,4 +157,53 @@ const userDelete = asynchandler(async (req, res) => {
     .status(200)
     .json(new apiresponse(200, userDel, "User is being been delted"));
 });
-export { userRegister, userLogin, userDelete, userLogout };
+
+const userProfile = asynchandler(async (req, res) => {
+  const { id } = req.body;
+  const user = await User.findById(id);
+  if (!user) {
+    throw new apierror(403, "cant get the user you are searching for");
+  }
+
+  const product = await Product.find();
+  const products = await Promise.all(
+    product.map(async (fn) => {
+      // Find the user associated with the product
+      
+  
+      // Check if the business ID matches the user ID
+      if (user && user._id.toString() === fn.buisness.toString()) {
+        // If true, return the product details
+        return {
+          id: fn._id,
+          images: fn.productImages,
+        };
+      }
+  
+     
+    })
+  );
+  const validProducts = products.filter(Boolean);
+  const userData = {
+    profilePicture: user.profilePicture,
+    name: user.name,
+    posts: validProducts,
+  };
+  return res
+    .status(200)
+    .json(new apiresponse(200, userData, "getting the user profile"));
+});
+const getUser = asynchandler(async (req, res) => {
+  const user = await User.find();
+  return res
+    .status(200)
+    .json(new apiresponse(200, user, "Getting user detials"));
+});
+export {
+  userRegister,
+  userLogin,
+  userDelete,
+  userLogout,
+  getUser,
+  userProfile,
+};

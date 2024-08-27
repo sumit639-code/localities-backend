@@ -1,8 +1,10 @@
 import { Router } from "express";
 import {
+  getUser,
   userDelete,
   userLogin,
   userLogout,
+  userProfile,
   userRegister,
 } from "../controllers/user.controllers.js";
 import { verifyJwt } from "../middleware/auth.middleware.js";
@@ -21,6 +23,8 @@ userRouter.route("/register").post(
 );
 userRouter.route("/login").post(userLogin);
 userRouter.route("/logout").post(verifyJwt, userLogout);
+userRouter.route("/getuser").get(verifyJwt, getUser);
+userRouter.route("/userprofile").post(verifyJwt, userProfile);
 userRouter.route("/delete").post(userDelete);
 
 export default userRouter;

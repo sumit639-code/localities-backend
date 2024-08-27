@@ -18,8 +18,9 @@ const products = asynchandler(async (req, res) => {
       // Return an object with the desired properties
       return {
         id: fn._id,
+        userId: user._id,
         username: user ? user.name : "Unknown User", // Handle case where user is not found
-        userprofile:user.profilePicture,
+        userprofile: user.profilePicture,
         productname: fn.name,
         description: fn.description,
         images: fn.productImages,
