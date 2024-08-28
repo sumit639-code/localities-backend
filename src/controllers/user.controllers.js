@@ -227,6 +227,43 @@ const follow = asynchandler(async (req, res) => {
     .json(new apiresponse(200, profileUser, "user has beem followed"));
 });
 
+const dataprofiledata = asynchandler(async (req, res) => {
+  const user = req.user;
+
+  if (!user) {
+    throw new apierror(403, "cant get the user you are searching for");
+  }
+
+  const product = await Product.find();
+  const products = await Promise.all(
+    product.map(async (fn) => {
+      // Find the user associated with the product
+
+      // Check if the business ID matches the user ID
+      if (user && user._id.toString() === fn.buisness.toString()) {
+        // If true, return the product details
+        return {
+          id: fn._id,
+          images: fn.productImages,
+        };
+      }
+    })
+  );
+  const validProducts = products.filter(Boolean);
+  const userData = {
+    profilePicture: user.profilePicture,
+    name: user.name,
+    posts: validProducts,
+    following: user.following,
+    followers: user.followers,
+  };
+  console.log(user);
+  
+  return res
+    .status(200)
+    .json(new apiresponse(200, userData, "user details are being shown"));
+});
+
 export {
   userRegister,
   userLogin,
@@ -235,4 +272,5 @@ export {
   getUser,
   userProfile,
   follow,
+  dataprofiledata
 };

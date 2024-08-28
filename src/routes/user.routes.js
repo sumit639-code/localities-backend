@@ -1,7 +1,9 @@
 import { Router } from "express";
 import {
+  dataprofiledata,
   follow,
   getUser,
+  
   userDelete,
   userLogin,
   userLogout,
@@ -28,5 +30,6 @@ userRouter.route("/getuser").get(verifyJwt, getUser);
 userRouter.route("/userprofile").post(verifyJwt, userProfile);
 userRouter.route("/delete").post(userDelete);
 userRouter.route("/follow").post(verifyJwt, follow);
+userRouter.route("/dataprofiledata").get(verifyJwt, dataprofiledata);
 
 export default userRouter;
